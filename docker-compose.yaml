@@ -20,12 +20,13 @@ services:
       - AIRFLOW__CORE__LOAD_EXAMPLES=${AIRFLOW__CORE__LOAD_EXAMPLES:-False}
       - AIRFLOW__CORE__DAGS_FOLDER=${AIRFLOW__CORE__DAGS_FOLDER:-/opt/airflow/dags}
       - AIRFLOW__CORE__DEFAULT_TIMEZONE=${AIRFLOW__CORE__DEFAULT_TIMEZONE:-America/Sao_Paulo}
+      - AIRFLOW__WEBSERVER__HIDE_PAUSED_DAGS_BY_DEFAULT=False
+      - AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL=30
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./config:/opt/airflow/config
-      - ./config/airflow.cfg:/opt/airflow/airflow.cfg
       - ./requirements.txt:/opt/airflow/requirements.txt
     ports:
       - "8080:8080"
