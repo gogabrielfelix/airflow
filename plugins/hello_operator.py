@@ -1,5 +1,5 @@
 from airflow.models.baseoperator import BaseOperator
-from airflow.utils.decorators import apply_defaults
+from typing import Any, Dict
 
 class HelloOperator(BaseOperator):
     """
@@ -9,12 +9,11 @@ class HelloOperator(BaseOperator):
     :type name: str
     """
     
-    @apply_defaults
     def __init__(self, name: str = "Mundo", **kwargs) -> None:
         super().__init__(**kwargs)
         self.name = name
         
-    def execute(self, context):
+    def execute(self, context: Dict[str, Any]) -> str:
         """
         Método chamado pelo Airflow quando a tarefa é executada
         """

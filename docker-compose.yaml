@@ -22,6 +22,10 @@ services:
       - AIRFLOW__CORE__DEFAULT_TIMEZONE=${AIRFLOW__CORE__DEFAULT_TIMEZONE:-America/Sao_Paulo}
       - AIRFLOW__WEBSERVER__HIDE_PAUSED_DAGS_BY_DEFAULT=False
       - AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL=30
+      - AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL=30
+      - AIRFLOW__CORE__STORE_SERIALIZED_DAGS=True
+      - AIRFLOW__CORE__STORE_DAG_CODE=True
+      - AIRFLOW__LOGGING__LOGGING_LEVEL=INFO
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -30,8 +34,14 @@ services:
     ports:
       - "8080:8080"
     restart: always
+    user: "50000:0"
     command: >
       bash -c "pip install apache-airflow-providers-amazon==7.3.0 apache-airflow-providers-postgres==5.6.0 &&
+               echo 'Verificando diretórios e permissões...' &&
+               mkdir -p /opt/airflow/logs /opt/airflow/plugins &&
+               chmod -R 777 /opt/airflow/logs /opt/airflow/plugins /opt/airflow/dags &&
+               ls -la /opt/airflow/dags /opt/airflow/plugins &&
+               echo 'Iniciando Airflow...' &&
                airflow standalone"
 
 volumes:

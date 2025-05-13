@@ -27,12 +27,13 @@ dag = DAG(
 # Tarefa que executa um comando bash
 t1 = BashOperator(
     task_id='print_date',
-    bash_command='date',
+    bash_command='date > /tmp/current_date.txt && echo "Data atual salva em /tmp/current_date.txt"',
     dag=dag,
 )
 
 # Função Python para ser executada por uma tarefa
 def print_hello():
+    print("Olá do Airflow!")
     return 'Olá do Airflow!'
 
 # Tarefa que executa uma função Python
