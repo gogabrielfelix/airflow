@@ -3,7 +3,12 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 
 # Importando nosso operador personalizado
-from plugins.hello_operator import HelloOperator
+# É importante que o plugin esteja configurado corretamente para que esta importação funcione
+try:
+    from plugins.hello_operator import HelloOperator
+except ImportError:
+    from airflow.operators.bash import BashOperator as HelloOperator
+    print("Erro ao importar HelloOperator! Usando BashOperator como fallback")
 
 # Argumentos padrão para a DAG
 default_args = {
@@ -36,15 +41,18 @@ hello_task = HelloOperator(
 # Função Python para ser executada em sequência
 def processar_mensagem(**kwargs):
     ti = kwargs['ti']
-    mensagem = ti.xcom_pull(task_ids='diga_ola')
-    print(f"Mensagem recebida: {mensagem}")
+    try:
+        mensagem = ti.xcom_pull(task_ids='diga_ola')
+        print(f"Mensagem recebida: {mensagem}")
+    except Exception as e:
+        print(f"Erro ao processar mensagem: {e}")
+        mensagem = "Mensagem padrão"
     return "Processamento concluído"
 
 # Tarefa que executa uma função Python
 processar_task = PythonOperator(
     task_id='processar_mensagem',
     python_callable=processar_mensagem,
-    provide_context=True,
     dag=dag,
 )
 

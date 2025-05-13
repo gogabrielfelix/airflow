@@ -34,13 +34,14 @@ services:
     ports:
       - "8080:8080"
     restart: always
-    user: "50000:0"
     command: >
       bash -c "pip install apache-airflow-providers-amazon==7.3.0 apache-airflow-providers-postgres==5.6.0 &&
                echo 'Verificando diretórios e permissões...' &&
                mkdir -p /opt/airflow/logs /opt/airflow/plugins &&
-               chmod -R 777 /opt/airflow/logs /opt/airflow/plugins /opt/airflow/dags &&
-               ls -la /opt/airflow/dags /opt/airflow/plugins &&
+               echo 'Conteúdo do diretório dags:' &&
+               ls -la /opt/airflow/dags &&
+               echo 'Conteúdo do diretório plugins:' &&
+               ls -la /opt/airflow/plugins &&
                echo 'Iniciando Airflow...' &&
                airflow standalone"
 
