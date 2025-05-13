@@ -1,0 +1,50 @@
+# Logs
+logs/
+*.log
+
+# Ambiente virtual
+.env
+.venv
+env/
+venv/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Arquivos de configuração local
+*.local
+
+# Arquivos Python
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Arquivos Mac/OSX
+.DS_Store
+
+# Arquivos Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs e editores
+.idea/
+.vscode/
+*.swp
+*.swo 
