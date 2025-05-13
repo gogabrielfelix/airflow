@@ -5,7 +5,7 @@ from airflow.operators.python import PythonOperator
 # Importando nosso operador personalizado
 # É importante que o plugin esteja configurado corretamente para que esta importação funcione
 try:
-    from plugins.hello_operator import HelloOperator
+    from plugins.operators.hello_operator import HelloOperator
 except ImportError:
     from airflow.operators.bash import BashOperator as HelloOperator
     print("Erro ao importar HelloOperator! Usando BashOperator como fallback")
