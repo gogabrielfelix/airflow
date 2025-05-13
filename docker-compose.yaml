@@ -3,31 +3,28 @@ services:
   postgres:
     image: postgres:13
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-airflow}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-airflow}
-      - POSTGRES_DB=${POSTGRES_DB:-airflow}
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
     restart: always
 
-  airflow:
-    image: apache/airflow:latest
+  airflow-webserver:
+    image: apache/airflow:2.7.1
     depends_on:
       - postgres
     environment:
-      - AIRFLOW__CORE__EXECUTOR=${AIRFLOW__CORE__EXECUTOR:-LocalExecutor}
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=${AIRFLOW__DATABASE__SQL_ALCHEMY_CONN:-postgresql+psycopg2://airflow:airflow@postgres/airflow}
-      - AIRFLOW__CORE__LOAD_EXAMPLES=${AIRFLOW__CORE__LOAD_EXAMPLES:-False}
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
-      - AIRFLOW__CORE__DEFAULT_TIMEZONE=${AIRFLOW__CORE__DEFAULT_TIMEZONE:-America/Sao_Paulo}
-      - AIRFLOW__WEBSERVER__HIDE_PAUSED_DAGS_BY_DEFAULT=False
-      - AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL=10
-      - AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL=10
-      - AIRFLOW__CORE__STORE_SERIALIZED_DAGS=True
-      - AIRFLOW__CORE__STORE_DAG_CODE=True
-      - AIRFLOW__LOGGING__LOGGING_LEVEL=DEBUG
-      - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
-      - AIRFLOW__DEBUG__FAIL_FAST=True
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
+      - AIRFLOW__WEBSERVER__RBAC=True
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -35,17 +32,51 @@ services:
       - ./config:/opt/airflow/config
     ports:
       - "8080:8080"
+    command: webserver
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     restart: always
-    command: >
-      bash -c "pip install apache-airflow-providers-amazon==7.3.0 apache-airflow-providers-postgres==5.6.0 &&
-               echo 'Verificando diretórios e permissões...' &&
-               mkdir -p /opt/airflow/logs /opt/airflow/plugins &&
-               echo 'Conteúdo do diretório dags:' &&
-               ls -la /opt/airflow/dags &&
-               echo 'Conteúdo do diretório plugins:' &&
-               ls -la /opt/airflow/plugins &&
-               echo 'Iniciando Airflow...' &&
-               airflow standalone"
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.1
+    depends_on:
+      - postgres
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config:/opt/airflow/config
+    command: scheduler
+    restart: always
+
+  airflow-init:
+    image: apache/airflow:2.7.1
+    depends_on:
+      - postgres
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+      - _AIRFLOW_DB_UPGRADE=true
+      - _AIRFLOW_WWW_USER_CREATE=true
+      - _AIRFLOW_WWW_USER_USERNAME=admin
+      - _AIRFLOW_WWW_USER_PASSWORD=admin
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config:/opt/airflow/config
+    command: version
+    restart: "no"
 
 volumes:
   postgres_data:
